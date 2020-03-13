@@ -7,10 +7,13 @@ import java.util.Timer;
 import java.util.TimerTask;
 
 public class WaterWidget extends UIElement {
-    double waterCoolDown = 60*1000*15;
+    double waterTimerMinutes = 15;
+    double waterCoolDown = 60*1000*waterTimerMinutes;
     double waterTimeLeft = waterCoolDown;
     double waterTimerWidgetMultiplier = 280/waterTimeLeft;
-    Timer reminderTimer = new Timer("Reminder");
+    double reminderCoolDown = 60*1000;
+    double reminderTimeLeft = reminderCoolDown;
+
     public WaterWidget(int xPos, int yPos, int xSize, int ySize) {
         super(xPos, yPos, xSize, ySize);
     }
@@ -26,24 +29,20 @@ public class WaterWidget extends UIElement {
         g.drawString((int)(waterTimeLeft/1000)/60+":"+(int)(waterTimeLeft/1000)%60, 270, 320);
     }
     boolean played = false;
-    boolean scheduled = false;
     @Override
     public void update(double deltaTime) {
         if(waterTimeLeft>0)
             waterTimeLeft -= deltaTime;
         else
-        if(!played) {
-            SoundHandler.playSound("DrinkWater.wav");
-            played = true;
-            reminderTimer = new Timer("Reminder");
-            if(!scheduled) {
-                reminderTimer.schedule(new TimerTask() {
-                    @Override
-                    public void run() {
-                        SoundHandler.playSound("DrinkWater.wav");
-                    }
-                }, 0, 1000*60);
-                scheduled = true;
+            if(!played) {
+                SoundHandler.playSound("DrinkWater.wav");
+                played = true;
+            }
+        if(timerOver()) {
+            reminderTimeLeft -= deltaTime;
+            if(reminderTimeLeft<=0) {
+                SoundHandler.playSound("DrinkWater.wav");
+                reminderTimeLeft = reminderCoolDown;
             }
         }
     }
@@ -52,7 +51,11 @@ public class WaterWidget extends UIElement {
         waterTimeLeft = waterCoolDown;
         played = false;
         SoundHandler.playSound("Refill.wav");
-        reminderTimer.cancel();
-        scheduled = false;
+    }
+
+    public boolean timerOver()  {
+        if(waterTimeLeft<=0)
+            return true;
+        return false;
     }
 }
